@@ -28,6 +28,7 @@
 	num2: .word 0
 	den2: .word 1
 .text
+	# --- AQUI SE EJECUTA EL MENU PRINCIPAL DEL PROGRAMA
 	main:
 		# Pide la entrada de la opcion a elegir
 		li $v0, 4
@@ -93,6 +94,7 @@
 		mul $t6, $t2, $t3
 		mul $t7, $t2, $t4
 		add $t6, $t6, $t5
+		jal simplificarFraccion
 		# --- Mostrar suma de fracciones
 		# Imprimir primera fraccion
 		li $v0, 1
@@ -122,16 +124,8 @@
 		li $v0, 4
 		la $a0, sms_igual
 		syscall
-		# Imprimir fraccion resultante (hacer validaciones)
-		li $v0, 1
-		add $a0, $zero, $t6
-		syscall
-		li $v0, 4
-		la $a0, sms_simboloFraccion
-		syscall
-		li $v0, 1
-		add $a0, $zero, $t7
-		syscall
+		# Imprimir fraccion simplificada
+		jal mostrarResultado
 		# Volver al main
 		li $v0, 4
 		la $a0, sms_newLine
@@ -179,16 +173,9 @@
 		li $v0, 4
 		la $a0, sms_igual
 		syscall
-		# Imprimir fraccion resultante (hacer validaciones)
-		li $v0, 1
-		add $a0, $zero, $t6
-		syscall
-		li $v0, 4
-		la $a0, sms_simboloFraccion
-		syscall
-		li $v0, 1
-		add $a0, $zero, $t7
-		syscall
+		# Imprimir fraccion simplificada
+		# jal simplificarFraccion
+		jal mostrarResultado
 		# Volver al main
 		li $v0, 4
 		la $a0, sms_newLine
@@ -234,16 +221,9 @@
 		li $v0, 4
 		la $a0, sms_igual
 		syscall
-		# Imprimir fraccion resultante (hacer validaciones)
-		li $v0, 1
-		add $a0, $zero, $t6
-		syscall
-		li $v0, 4
-		la $a0, sms_simboloFraccion
-		syscall
-		li $v0, 1
-		add $a0, $zero, $t7
-		syscall
+		# Imprimir fraccion simplificada
+		# jal simplificarFraccion
+		jal mostrarResultado
 		# Volver al main
 		li $v0, 4
 		la $a0, sms_newLine
@@ -289,16 +269,9 @@
 		li $v0, 4
 		la $a0, sms_igual
 		syscall
-		# Imprimir fraccion resultante (hacer validaciones)
-		li $v0, 1
-		add $a0, $zero, $t6
-		syscall
-		li $v0, 4
-		la $a0, sms_simboloFraccion
-		syscall
-		li $v0, 1
-		add $a0, $zero, $t7
-		syscall
+		# Imprimir fraccion simplificada
+		# jal simplificarFraccion
+		jal mostrarResultado
 		# Volver al main
 		li $v0, 4
 		la $a0, sms_newLine
@@ -342,4 +315,67 @@
 		addi $t5, $zero, 0 
 		addi $t6, $zero, 0 
 		addi $t7, $zero, 0 
+		jr $ra
+		
+	# Simplificar la fraccion mediante MCD en ambos Numerador y Denominador
+	# Se hacen copias de $t6 y $t7 (num y den), obtenemos $s2 como el MCD y dividimos los registros $tx entre $s2
+	simplificarFraccion:
+		# Si el numerador es cero, no hace falta simplificar
+		# beq $t6, $zero, finSimplificar
+		# Inicializar numerador, denominador y MCD en cero
+    		add $s0, $zero, $t6  
+    		add $s1, $zero, $t7  
+    		bucleSimplificar:
+        		beq $s1, $zero, finSimplificar
+        		div $s0, $s1                    	# numerador / denominador
+        		mfhi $s2                        		# Guardar el residuo en $s2
+        		move $s0, $s1                   	# Numerador = Denominador
+        		move $s1, $s2                   	# Denominador = Residuo
+        		j bucleSimplificar               
+    		finSimplificar:
+        		move $s2, $s0                   
+        		# Dividir numerador y denominador entre el MCD
+        		div $t6, $t6, $s2               
+        		div $t7, $t7, $s2               
+      		jr $ra
+        
+        # Imprimir ambos numerador y denominador (incluso un entero si aplica)
+        mostrarResultado:
+        	# Primero muestra la fraccion sin simplificar
+        	li $v0, 1
+		add $a0, $zero, $t6
+		syscall
+		li $v0, 4
+		la $a0, sms_simboloFraccion
+		syscall
+		li $v0, 1
+		add $a0, $zero, $t7
+		syscall
+		# Luego, muestra la fraccion simplificada separado con un "   =   "
+		li $v0, 4
+		la $a0, sms_igual
+		syscall
+        	jal simplificarFraccion
+        	li $v0, 1
+		add $a0, $zero, $t6
+		syscall
+		li $v0, 4
+		la $a0, sms_simboloFraccion
+		syscall
+		li $v0, 1
+		add $a0, $zero, $t7
+		syscall
+		# ¿Se podria dividir y obtener un entero? residuo $s3 debe ser cero
+		# Imprimir la division entre el numerador y denominador, asignar cociente en $s3
+		mostrarResultadoEntero:
+			div $t6, $t7
+			mfhi $s3
+			beq $s3, 0, main
+			li $v0, 4
+			la $a0, sms_igual
+			syscall
+			mflo $s3
+			li $v0, 1
+			move $a0, $t6
+			syscall
 		jr $ra
