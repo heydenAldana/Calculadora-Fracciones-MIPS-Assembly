@@ -14,7 +14,7 @@ Además, la calculadora incluye validaciones matemáticas importantes, como:
 - Manejar correctamente fracciones con denominadores iguales o diferentes
 - Simplificar los resultados de las operaciones y mostrarlos según amerite el caso
 
----
+
 
 ## Estructura y Flujo del Programa
 
@@ -63,13 +63,16 @@ El programa se organiza en dos grandes secciones:
 - **Simplificación**: Siempre intenta reducir la fracción al menor término posible.
 - **Resultado entero**: Si el numerador es divisible por el denominador, muestra el resultado como un número entero.
 
----
+
 
 ## Cómo Ejecutar
 1. Descarga e instala un simulador MIPS como **SPIM** o **QtSPIM**. o puedes usar **Mars**
 2. Carga el archivo `calculadoraFracciones.asm` en el simulador.
 3. Ejecuta el programa y sigue las instrucciones en pantalla.
 
----
+
+
+
+
 
 Apreciaría cualquier retroalimentación y/o sugerencias en el programa.
