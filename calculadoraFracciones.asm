@@ -6,11 +6,12 @@
 # Y se toma en consideracion validaciones lógicas a nivel matemático y casos especiales.
 
 .data
-	sms_Menu: .asciiz "\t\t= = = CALCULADORA DE FRACCIONES = = =\n\nA continuación se le despliega el siguiente menú de opciones: \n\t1. Suma\n\t2. Resta\n\t3. Multiplicacion\n\t4. Division\n\t5. Salir del programa\n\n Digite la opcion que quiera:\t"
+	sms_Menu: .asciiz "\t\t= = = CALCULADORA DE FRACCIONES = = =\n\nA continuación se le despliega el siguiente menú de opciones: \n\t1. Suma\n\t2. Resta\n\t3. Multiplicacion\n\t4. Division\n\t5. Potencia (acepta numeros enteros y fracciones)\n\t6. Salir del programa\n\n Digite la opcion que quiera:\t"
 	sms_preguntarNum1: .asciiz "\n- Por favor, digite el primer numerador: "
 	sms_preguntarNum2: .asciiz "\n- Por favor, digite el segundo numerador: "
 	sms_preguntarDen1: .asciiz "\n- Por favor, digite el primer denominador: "
 	sms_preguntarDen2: .asciiz "\n- Por favor, digite el segundo  denominador: "
+	sms_preguntarExponente: .asciiz "\n- Por favor, digite el exponente al cual quiere elevar la fraccion: "
 	sms_newLine: .asciiz "\n"
 	sms_opcionInvalida: .asciiz "\n- AVISO: Debe digitar un número dentro de las opciones disponibles\n\n"
 	sms_ErrorDenominador: .asciiz "\n- ERROR: No se puede realizar la operacion por indeterminacion\n"
@@ -22,6 +23,9 @@
 	sms_div: .asciiz "   /   "
 	sms_simboloFraccion: .asciiz " / "
 	sms_igual: .asciiz "   =   "
+	sms_abreParentesis: .asciiz " ( "
+	sms_cierraParentesis: .asciiz " ) "
+	sms_potencia: .asciiz " ^ "
 	
 	num1: .word 0
 	den1: .word 1
@@ -32,6 +36,7 @@
 		li $v0, 4
 		la $a0, sms_newLine
 		syscall
+		jal limpiarRegistros
 		# Pide la entrada de la opcion a elegir
 		li $v0, 4
 		la $a0, sms_Menu
@@ -40,9 +45,9 @@
 		syscall
 		move $t0, $v0
 		# Validaciones especiales (opcion invalida, selecciona SALIR)
-		bgt $t0, 5, mostrarMensajeOpcionInvalida
+		bgt $t0, 6, mostrarMensajeOpcionInvalida
 		blt $t0, 1, mostrarMensajeOpcionInvalida
-		beq $t0, 5, salirPrograma
+		beq $t0, 6, salirPrograma
 		# Pedir entrada de datos de numerador y denominador
 		li $v0, 4
 		la $a0, sms_preguntarNum1
@@ -56,6 +61,7 @@
 		li $v0, 5
 		syscall
 		move $t2, $v0
+		beq $t0, 5, potencia
 		li $v0, 4
 		la $a0, sms_preguntarNum2
 		syscall
@@ -261,7 +267,56 @@
 		syscall
 		# Imprimir fraccion resultante (hacer validaciones)
 		j mostrarResultado
-		
+	
+	potencia:
+		# Imprimir fraccion resultante (hacer validaciones)
+		beq $t2, 0, msgErrorDenominador
+		# Pedir entrada del exponente
+		li $v0, 4
+		la $a0, sms_preguntarExponente
+		syscall
+		li $v0, 5
+		syscall
+		move $t5, $v0
+		# Realizar calculo mediante un bucle
+		add $s0, $zero, $t5
+		add $t6, $zero, $t1
+		add $t7, $zero, $t2
+		calcularPotencia:
+			beq $s0, $zero, finCalcularPotencia
+			sub $s0, $s0, 1
+			mul $t6, $t6, $t1
+			mul $t7, $t7, $t2
+			j calcularPotencia
+		finCalcularPotencia:
+			# Imprimir primera fraccion entre parentesis
+			li $v0, 4
+			la $a0, sms_abreParentesis
+			syscall
+			li $v0, 1
+			add $a0, $zero, $t1
+			syscall
+			li $v0, 4
+			la $a0, sms_simboloFraccion
+			syscall
+			li $v0, 1
+			add $a0, $zero, $t2
+			syscall
+			li $v0, 4
+			la $a0, sms_cierraParentesis
+			syscall
+			# Elevado a la (mostrar exponente)
+			li $v0, 4
+			la $a0, sms_potencia
+			syscall
+			li $v0, 1
+			add $a0, $zero, $t5
+			syscall
+			# Imprimir simbolo igual
+			li $v0, 4
+			la $a0, sms_igual
+			syscall
+		j mostrarResultado
 		
 	# --- MANEJO DE ERRORES Y VALIDACIONES MATEMATICAS
 	# Se muestra mensaje si alguno de los denominadores es cero (para division se maneja diferente)
@@ -296,6 +351,9 @@
 		addi $t5, $zero, 0 
 		addi $t6, $zero, 0 
 		addi $t7, $zero, 0 
+		addi $s0, $zero, 0 
+		addi $s1, $zero, 0 
+		addi $s2, $zero, 0 
 		jr $ra
 
 	# Imprimir el resultado, luego mostrarlo simplificado
