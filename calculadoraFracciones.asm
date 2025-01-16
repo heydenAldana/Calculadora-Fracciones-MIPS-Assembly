@@ -11,9 +11,11 @@
 	sms_preguntarNum2: .asciiz "\n- Por favor, digite el segundo numerador: "
 	sms_preguntarDen1: .asciiz "\n- Por favor, digite el primer denominador: "
 	sms_preguntarDen2: .asciiz "\n- Por favor, digite el segundo  denominador: "
-	sms_preguntarExponente: .asciiz "\n- Por favor, digite el exponente al cual quiere elevar la fraccion: "
+	sms_preguntarExponenteNum: .asciiz "\n- Por favor, digite el exponente al cual quiere elevar la fraccion: "
+	sms_preguntarExponenteDen: .asciiz "\n- Bien, ese fue para el numerador.\n  Por favor, digite el denominador del exponente al cual quiere elevar la fraccion: "
+	sms_preguntarExponenteFraccional: .asciiz "\n- Escriba (E) para numero entero o (F) para que sea una fraccion el exponente:  "
 	sms_newLine: .asciiz "\n"
-	sms_opcionInvalida: .asciiz "\n- AVISO: Debe digitar un número dentro de las opciones disponibles\n\n"
+	sms_opcionInvalida: .asciiz "\n- AVISO: Debe digitar un número dentro de las opciones disponibles, y seguir las indicaciones dadas\n\n"
 	sms_ErrorDenominador: .asciiz "\n- ERROR: No se puede realizar la operacion por indeterminacion\n"
 	sms_ErrorDivision: .asciiz "\n- ERROR: No se puede realizar la division porque el resultado\n  es una fraccion con denominador cero, lo cual es INDETERMINACION\n\n"
 	
@@ -269,25 +271,98 @@
 		j mostrarResultado
 	
 	potencia:
-		# Imprimir fraccion resultante (hacer validaciones)
 		beq $t2, 0, msgErrorDenominador
-		# Pedir entrada del exponente
+		# Pedir que elija si el exponente es entero o fraccion
 		li $v0, 4
-		la $a0, sms_preguntarExponente
+		la $a0, sms_preguntarExponenteFraccional
 		syscall
-		li $v0, 5
+		li $v0, 12
 		syscall
-		move $t5, $v0
-		# Realizar calculo mediante un bucle
-		add $s0, $zero, $t5
-		add $t6, $zero, $t1
-		add $t7, $zero, $t2
-		calcularPotencia:
-			beq $s0, $zero, finCalcularPotencia
-			sub $s0, $s0, 1
-			mul $t6, $t6, $t1
-			mul $t7, $t7, $t2
-			j calcularPotencia
+		# Guardar entrada de caracter y evaluar si eligio alguna, de lo contrario, mostrar mensaje de error 
+		# por opcion invalida
+		move $s0, $v0
+		beq $s0, 'E', calcularPotenciaEntero
+		beq $s0, 'e', calcularPotenciaEntero
+		beq $s0, 'F', calcularPotenciaFraccion
+		beq $s0, 'f', calcularPotenciaFraccion
+		j mostrarMensajeOpcionInvalida
+		# Realizar calculo con variables inicializadas, utilizando $s1 y $s2 para guardar el exponente, #s3 y $s4 como indices (num y den)
+		addi $s3, $zero, 1
+		addi $s4, $zero, 1
+		addi $t6, $zero, 1
+		addi $t7, $zero, 1
+		# Bloque de codigo para el calculo de potencias con un exponente entero
+		calcularPotenciaEntero:
+			# Solicitara ingresar el exponente, luego opera dependiendo el caso
+			li $v0, 4
+			la $a0, sms_preguntarExponenteNum
+			syscall
+			li $v0, 5
+			syscall
+			move $s1, $v0
+			# Caso base: exponente cero
+			calcularPotenciaExpCero:
+				addi $t6, $zero, 1
+				addi $t7, $zero, 1
+				bgtz $s1, calcularPotenciaExpUno
+				bltz $s1, calcularPotenciaExpNegativo
+				j finCalcularPotencia
+			# Caso donde el exponente es negativo
+			calcularPotenciaExpNegativo:
+				mul $t6, $t6, $t2          
+    				mul $t7, $t7, $t1           
+    				subi $s3, $s3, 1           
+    				bgt $s3, $s1, calcularPotenciaExpNegativo  
+				j finCalcularPotencia
+			# Caso cuando el exponente es uno
+			calcularPotenciaExpUno:
+				add $t6, $zero, $t1
+				add $t7, $zero, $t2
+				bgt $s1, 1, buclePotenciaExpEntero
+				j finCalcularPotencia
+			# Caso cuando el exponente es mayor a uno
+			buclePotenciaExpEntero:
+    				mul $t6, $t6, $t1          
+    				mul $t7, $t7, $t2           
+    				addi $s3, $s3, 1           
+    				beq $s3, $s1, buclePotenciaExpEntero  
+    				j finCalcularPotencia
+    		# Bloque de codigo para el calculo de potencias con un exponente fraccional
+		calcularPotenciaFraccion:
+		# Solicita ambos numerador y denominador del exponente, luego opera segun el caso
+			li $v0, 4
+			la $a0, sms_preguntarExponenteNum
+			syscall
+			li $v0, 5
+			syscall
+			move $s1, $v0
+			li $v0, 4
+			la $a0, sms_preguntarExponenteDen
+			syscall
+			li $v0, 5
+			syscall
+			move $s2, $v0
+			# Verifica que el denominador del exponente no sea cero
+			beq $s2, 0, msgErrorDenominador
+			# Caso base cuando el exponente numerador es cero
+			calcularPotenciaExpFraccionCero:
+				addi $t6, $zero, 1
+				addi $t7, $zero, 1
+				bgtz $s1, calcularPotenciaExpNum
+				j finCalcularPotencia
+			# Calcula el numerador resultante
+			calcularPotenciaExpNum:
+				mul $t6, $t6, $t1
+				addi $s3, $s3, 1
+				blt $s3, $s1, calcularPotenciaExpNum
+				j calcularPotenciaExpDen
+			# Calcula el denominador resultante
+			calcularPotenciaExpDen:
+				mul $t7, $t7, $t2
+				addi $s4, $s4, 1
+				blt $s4, $s2, calcularPotenciaExpDen
+				j finCalcularPotencia
+		# Aqui se muestra ya la operacion de potencia antes de mostrar el resultado final
 		finCalcularPotencia:
 			# Imprimir primera fraccion entre parentesis
 			li $v0, 4
@@ -309,14 +384,39 @@
 			li $v0, 4
 			la $a0, sms_potencia
 			syscall
-			li $v0, 1
-			add $a0, $zero, $t5
-			syscall
-			# Imprimir simbolo igual
-			li $v0, 4
-			la $a0, sms_igual
-			syscall
-		j mostrarResultado
+			mostrarPotencia:
+				beq $s0, 'F',mostrarDenominadorPotencia
+				beq $s0, 'f', mostrarDenominadorPotencia
+				li $v0, 1
+				add $a0, $zero, $s1
+				syscall
+				# Imprimir simbolo igual
+				li $v0, 4
+				la $a0, sms_igual
+				syscall
+				j mostrarResultado
+			mostrarDenominadorPotencia:	
+				li $v0, 4
+				la $a0, sms_abreParentesis
+				syscall		
+				li $v0, 1
+				add $a0, $zero, $s1
+				syscall
+				li $v0, 4
+				la $a0, sms_simboloFraccion
+				syscall
+				li $v0, 1
+				add $a0, $zero, $s2
+				syscall
+				li $v0, 4
+				la $a0, sms_cierraParentesis
+				syscall
+				# Imprimir simbolo igual
+				li $v0, 4
+				la $a0, sms_igual
+				syscall
+				j mostrarResultado
+				
 		
 	# --- MANEJO DE ERRORES Y VALIDACIONES MATEMATICAS
 	# Se muestra mensaje si alguno de los denominadores es cero (para division se maneja diferente)
@@ -337,6 +437,7 @@
 	
 	# Mostrar mensaje de error si el usuario no ingresa una opcion valida
 	mostrarMensajeOpcionInvalida:
+		jal limpiarRegistros
 		li $v0, 4
 		la $a0, sms_opcionInvalida
 		syscall 
@@ -354,6 +455,7 @@
 		addi $s0, $zero, 0 
 		addi $s1, $zero, 0 
 		addi $s2, $zero, 0 
+		addi $s3, $zero, 0 
 		jr $ra
 
 	# Imprimir el resultado, luego mostrarlo simplificado
@@ -369,11 +471,12 @@
 		add $a0, $zero, $t7
 		syscall
 		# --- Simplificar la fraccion 
-		# Guardar copias del numerador y denominador
+		# Guardar copias del numerador$s0  y denominador $s1
     		add $s0, $zero, $t6
     		add $s1, $zero, $t7
     		# Calcular el MCD usando el algoritmo de Euclides Mientras el denominador no sea 0
     		bucleSimplificar:
+    			beq $s1, 1, mostrarFraccionDividida
         		beq $s1, $zero, finSimplificar 
         		beq $s0, 1, main 
         		beq $s0, $zero, mostrarFraccionDividida 
