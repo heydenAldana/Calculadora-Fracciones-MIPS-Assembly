@@ -11,9 +11,10 @@
 	sms_preguntarNum2: .asciiz "\n- Por favor, digite el segundo numerador: "
 	sms_preguntarDen1: .asciiz "\n- Por favor, digite el primer denominador: "
 	sms_preguntarDen2: .asciiz "\n- Por favor, digite el segundo  denominador: "
-	sms_preguntarExponenteNum: .asciiz "\n- Por favor, digite el exponente al cual quiere elevar la fraccion: "
-	sms_preguntarExponenteDen: .asciiz "\n- Bien, ese fue para el numerador.\n  Por favor, digite el denominador del exponente al cual quiere elevar la fraccion: "
-	sms_preguntarExponenteFraccional: .asciiz "\n- Escriba (E) para numero entero o (F) para que sea una fraccion el exponente:  "
+	sms_preguntarExponenteEntero: .asciiz "\n- Por favor, digite el exponente al cual quiere elevar la fraccion: "
+	sms_preguntarExponenteNum: .asciiz "\n- Por favor, digite el exponente al cual quiere elevar el numerador: "
+	sms_preguntarExponenteDen: .asciiz "\n- Por favor, digite el exponente al cual quiere elevar el denominador: "
+	sms_preguntarExponenteFraccional: .asciiz "\n- Puede elegir lo siguiente:\n\tEscriba (E/e) para elevar la fraccion con un solo exponente\n\tEscriba (F/f) para elevar la fraccion con sus propios exponentes por separado:  "
 	sms_newLine: .asciiz "\n"
 	sms_opcionInvalida: .asciiz "\n- AVISO: Debe digitar un número dentro de las opciones disponibles, y seguir las indicaciones dadas\n\n"
 	sms_ErrorDenominador: .asciiz "\n- ERROR: No se puede realizar la operacion por indeterminacion\n"
@@ -114,7 +115,10 @@
 			add $t7, $zero, $t2
 		# --- Mostrar suma de fracciones
 		continuarOperacionSuma:
-		# Imprimir primera fraccion
+			li $v0, 4
+			la $a0, sms_newLine
+			syscall
+			# Imprimir primera fraccion
 			li $v0, 1
 			add $a0, $zero, $t1
 			syscall
@@ -161,7 +165,10 @@
 			add $t7, $zero, $t2
 		# --- Mostrar resta de fracciones
 		continuarOperacionResta:
-		# Imprimir primera fraccion
+			li $v0, 4
+			la $a0, sms_newLine
+			syscall
+			# Imprimir primera fraccion
 			li $v0, 1
 			add $a0, $zero, $t1
 			syscall
@@ -200,6 +207,9 @@
 		mul $t6, $t1, $t3
 		mul $t7, $t3, $t4
 		# --- Mostrar multiplicacion de fracciones
+		li $v0, 4
+		la $a0, sms_newLine
+		syscall
 		# Imprimir primera fraccion
 		li $v0, 1
 		add $a0, $zero, $t1
@@ -239,6 +249,9 @@
 		# Se evalua despues del resultado, no antes
 		beq $t7, 0, msgErrorDivision
 		# --- Mostrar division de fracciones
+		li $v0, 4
+		la $a0, sms_newLine
+		syscall
 		# Imprimir primera fraccion
 		li $v0, 1
 		add $a0, $zero, $t1
@@ -295,7 +308,7 @@
 		calcularPotenciaEntero:
 			# Solicitara ingresar el exponente, luego opera dependiendo el caso
 			li $v0, 4
-			la $a0, sms_preguntarExponenteNum
+			la $a0, sms_preguntarExponenteEntero
 			syscall
 			li $v0, 5
 			syscall
@@ -364,29 +377,33 @@
 				j finCalcularPotencia
 		# Aqui se muestra ya la operacion de potencia antes de mostrar el resultado final
 		finCalcularPotencia:
-			# Imprimir primera fraccion entre parentesis
 			li $v0, 4
-			la $a0, sms_abreParentesis
+			la $a0, sms_newLine
 			syscall
-			li $v0, 1
-			add $a0, $zero, $t1
-			syscall
-			li $v0, 4
-			la $a0, sms_simboloFraccion
-			syscall
-			li $v0, 1
-			add $a0, $zero, $t2
-			syscall
-			li $v0, 4
-			la $a0, sms_cierraParentesis
-			syscall
-			# Elevado a la (mostrar exponente)
-			li $v0, 4
-			la $a0, sms_potencia
-			syscall
-			mostrarPotencia:
-				beq $s0, 'F',mostrarDenominadorPotencia
-				beq $s0, 'f', mostrarDenominadorPotencia
+			# Muestra la potencia con exponente entero en el formato (a/b) ^ n
+			mostrarOperacionPotenciaEntero:
+				# Imprimir primera fraccion entre parentesis
+				beq $s0, 'F',mostrarOperacionPotenciaFraccion
+				beq $s0, 'f', mostrarOperacionPotenciaFraccion
+				li $v0, 4
+				la $a0, sms_abreParentesis
+				syscall
+				li $v0, 1
+				add $a0, $zero, $t1
+				syscall
+				li $v0, 4
+				la $a0, sms_simboloFraccion
+				syscall
+				li $v0, 1
+				add $a0, $zero, $t2
+				syscall
+				li $v0, 4
+				la $a0, sms_cierraParentesis
+				syscall
+				# Elevado a la (mostrar exponente)
+				li $v0, 4
+				la $a0, sms_potencia
+				syscall
 				li $v0, 1
 				add $a0, $zero, $s1
 				syscall
@@ -395,18 +412,43 @@
 				la $a0, sms_igual
 				syscall
 				j mostrarResultado
-			mostrarDenominadorPotencia:	
+			# Muestra la potencia con exponente entero en el formato ((a^ n)/(b^ n))
+			mostrarOperacionPotenciaFraccion:
 				li $v0, 4
 				la $a0, sms_abreParentesis
-				syscall		
+				syscall	
+				li $v0, 4
+				la $a0, sms_abreParentesis
+				syscall	
+				li $v0, 1
+				add $a0, $zero, $t1
+				syscall	
+				li $v0, 4
+				la $a0, sms_potencia
+				syscall
 				li $v0, 1
 				add $a0, $zero, $s1
 				syscall
 				li $v0, 4
+				la $a0, sms_cierraParentesis
+				syscall
+				li $v0, 4
 				la $a0, sms_simboloFraccion
+				syscall
+				li $v0, 4
+				la $a0, sms_abreParentesis
+				syscall	
+				li $v0, 1
+				add $a0, $zero, $t2
+				syscall	
+				li $v0, 4
+				la $a0, sms_potencia
 				syscall
 				li $v0, 1
 				add $a0, $zero, $s2
+				syscall
+				li $v0, 4
+				la $a0, sms_cierraParentesis
 				syscall
 				li $v0, 4
 				la $a0, sms_cierraParentesis
