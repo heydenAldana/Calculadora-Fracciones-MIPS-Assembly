@@ -3,10 +3,12 @@
 #	- Resta
 #	- Multiplicacion
 #	- Division
+#	- Potencia
+#	- Raíz Cuadrada con punto flotante
 # Y se toma en consideracion validaciones lógicas a nivel matemático y casos especiales.
 
 .data
-	sms_Menu: .asciiz "\t\t= = = CALCULADORA DE FRACCIONES = = =\n\nA continuación se le despliega el siguiente menú de opciones: \n\t1. Suma\n\t2. Resta\n\t3. Multiplicacion\n\t4. Division\n\t5. Potencia (acepta numeros enteros y fracciones)\n\t6. Salir del programa\n\n Digite la opcion que quiera:\t"
+	sms_Menu: .asciiz "\t\t= = = CALCULADORA DE FRACCIONES = = =\n\nA continuación se le despliega el siguiente menú de opciones: \n\t1. Suma\n\t2. Resta\n\t3. Multiplicacion\n\t4. Division\n\t5. Potencia (acepta numeros enteros y fracciones)\n\t6. Raiz Cuadradaa\n\t7. Salir del programa\n\n Digite la opcion que quiera:\t"
 	sms_preguntarNum1: .asciiz "\n- Por favor, digite el primer numerador: "
 	sms_preguntarNum2: .asciiz "\n- Por favor, digite el segundo numerador: "
 	sms_preguntarDen1: .asciiz "\n- Por favor, digite el primer denominador: "
@@ -19,6 +21,7 @@
 	sms_opcionInvalida: .asciiz "\n- AVISO: Debe digitar un número dentro de las opciones disponibles, y seguir las indicaciones dadas\n\n"
 	sms_ErrorDenominador: .asciiz "\n- ERROR: No se puede realizar la operacion por indeterminacion\n"
 	sms_ErrorDivision: .asciiz "\n- ERROR: No se puede realizar la division porque el resultado\n  es una fraccion con denominador cero, lo cual es INDETERMINACION\n\n"
+	sms_ErrorRaiz: .asciiz "\n- ERROR: No se aceptan números negativos\n\n"
 	
 	sms_mas: .asciiz "   +   "
 	sms_menos: .asciiz "   -   "
@@ -29,12 +32,15 @@
 	sms_abreParentesis: .asciiz " ( "
 	sms_cierraParentesis: .asciiz " ) "
 	sms_potencia: .asciiz " ^ "
+	sms_raizCuadrada: .asciiz " sqrt"
 	
 	num1: .word 0
 	den1: .word 1
 	num2: .word 0
 	den2: .word 1
 .text
+
+.globl main
 	main:
 		li $v0, 4
 		la $a0, sms_newLine
@@ -48,9 +54,9 @@
 		syscall
 		move $t0, $v0
 		# Validaciones especiales (opcion invalida, selecciona SALIR)
-		bgt $t0, 6, mostrarMensajeOpcionInvalida
+		bgt $t0, 7, mostrarMensajeOpcionInvalida
 		blt $t0, 1, mostrarMensajeOpcionInvalida
-		beq $t0, 6, salirPrograma
+		beq $t0, 7, salirPrograma
 		# Pedir entrada de datos de numerador y denominador
 		li $v0, 4
 		la $a0, sms_preguntarNum1
@@ -65,6 +71,7 @@
 		syscall
 		move $t2, $v0
 		beq $t0, 5, potencia
+		beq $t0, 6, raizCuadrada
 		li $v0, 4
 		la $a0, sms_preguntarNum2
 		syscall
@@ -77,6 +84,9 @@
 		li $v0, 5
 		syscall
 		move $t4, $v0
+		li $v0, 4
+		la $a0, sms_newLine
+		syscall
 		li $v0, 4
 		la $a0, sms_newLine
 		syscall
@@ -284,6 +294,9 @@
 		j mostrarResultado
 	
 	potencia:
+		li $v0, 4
+		la $a0, sms_newLine
+		syscall
 		beq $t2, 0, msgErrorDenominador
 		# Pedir que elija si el exponente es entero o fraccion
 		li $v0, 4
@@ -459,14 +472,86 @@
 				syscall
 				j mostrarResultado
 				
-		
+	raizCuadrada:
+		li $v0, 4
+		la $a0, sms_newLine
+		syscall
+		# Validaciones (si den = 0, si la fraccion es negativa)
+		beq $t2, 0, msgErrorDenominador
+		blt $t1, 0, msgErrorRaiz
+		blt $t2, 0, msgErrorRaiz
+		# Usar $f0 como variable intermediaria para la conversion, $f1 para num y $f2 para den
+		calcularRaizCuadrada:
+			# Numerador
+			mtc1 $t1, $f0
+			cvt.s.w $f1, $f0
+			sqrt.s $f6, $f1
+			# Denominador
+			mtc1 $t2, $f0
+			cvt.s.w $f2, $f0
+			sqrt.s $f7, $f2
+			# Dvdir numerador / denominador directamente y almacenar resultado en $f3
+			div.s $f3, $f1, $f2
+		mostrarResultadoRaizCuadrada:
+			# Muestra la parte donde se realiza la operación
+			li $v0, 4
+			la $a0, sms_raizCuadrada
+			syscall	
+			li $v0, 4
+			la $a0, sms_abreParentesis
+			syscall	
+			li $v0, 1
+			add $a0, $zero, $t1
+			syscall	
+			li $v0, 4
+			la $a0, sms_simboloFraccion
+			syscall
+			li $v0, 1
+			add $a0, $zero, $t2
+			syscall
+			li $v0, 4
+			la $a0, sms_cierraParentesis
+			syscall
+			# Imprimir simbolo igual
+			li $v0, 4
+			la $a0, sms_igual
+			syscall 
+			# Muestra los numeros flotantes dividiendo
+			li $v0, 4
+			la $a0, sms_abreParentesis
+			syscall	
+			li $v0, 2
+			mov.s $f12, $f6
+			syscall
+			li $v0, 4
+			la $a0, sms_simboloFraccion
+			syscall
+			li $v0, 2
+			mov.s $f12, $f7
+			syscall
+			li $v0, 4
+			la $a0, sms_cierraParentesis
+			syscall
+			# Imprimir simbolo igual
+			li $v0, 4
+			la $a0, sms_igual
+			syscall 
+			# Mostrar resultado de la division entre los flotantes
+			li $v0, 2
+			mov.s $f12, $f3
+			syscall
+			li $v0, 4
+			la $a0, sms_newLine
+			syscall
+			j main
+			
 	# --- MANEJO DE ERRORES Y VALIDACIONES MATEMATICAS
 	# Se muestra mensaje si alguno de los denominadores es cero (para division se maneja diferente)
 	msgErrorDenominador:
 		jal limpiarRegistros
 		li $v0, 4
 		la $a0, sms_ErrorDenominador
-		syscall
+		syscall	
 		j main
 		
 	# Se muestra mensaje si algun numerador es cero (SOLO DIVISION)
@@ -477,6 +562,14 @@
 		syscall
 		j main
 	
+	# Se muestra mensaje si el numero n de la raiz es < 0 
+	msgErrorRaiz:
+		jal limpiarRegistros
+		li $v0, 4
+		la $a0, sms_ErrorRaiz
+		syscall
+		j main
+		
 	# Mostrar mensaje de error si el usuario no ingresa una opcion valida
 	mostrarMensajeOpcionInvalida:
 		jal limpiarRegistros
