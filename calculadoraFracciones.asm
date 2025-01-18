@@ -4,11 +4,11 @@
 #	- Multiplicacion
 #	- Division
 #	- Potencia
-#	- Raíz Cuadrada con punto flotante
-# Y se toma en consideracion validaciones lógicas a nivel matemático y casos especiales.
+#	- Raiz Cuadrada con punto flotante
+# Y se toma en consideracion validaciones logicas a nivel matematico y casos especiales.
 
 .data
-	sms_Menu: .asciiz "\t\t= = = CALCULADORA DE FRACCIONES = = =\n\nA continuación se le despliega el siguiente menú de opciones: \n\t1. Suma\n\t2. Resta\n\t3. Multiplicacion\n\t4. Division\n\t5. Potencia (acepta numeros enteros y fracciones)\n\t6. Raiz Cuadradaa\n\t7. Salir del programa\n\n Digite la opcion que quiera:\t"
+	sms_Menu: .asciiz "\t\t= = = CALCULADORA DE FRACCIONES = = =\n\nA continuacion se le despliega el siguiente menï¿½ de opciones: \n\t1. Suma\n\t2. Resta\n\t3. Multiplicacion\n\t4. Division\n\t5. Potencia (acepta numeros enteros y fracciones)\n\t6. Raiz Cuadradaa\n\t7. Salir del programa\n\n Digite la opcion que quiera:\t"
 	sms_preguntarNum1: .asciiz "\n- Por favor, digite el primer numerador: "
 	sms_preguntarNum2: .asciiz "\n- Por favor, digite el segundo numerador: "
 	sms_preguntarDen1: .asciiz "\n- Por favor, digite el primer denominador: "
@@ -18,10 +18,10 @@
 	sms_preguntarExponenteDen: .asciiz "\n- Por favor, digite el exponente al cual quiere elevar el denominador: "
 	sms_preguntarExponenteFraccional: .asciiz "\n- Puede elegir lo siguiente:\n\tEscriba (E/e) para elevar la fraccion con un solo exponente\n\tEscriba (F/f) para elevar la fraccion con sus propios exponentes por separado:  "
 	sms_newLine: .asciiz "\n"
-	sms_opcionInvalida: .asciiz "\n- AVISO: Debe digitar un número dentro de las opciones disponibles, y seguir las indicaciones dadas\n\n"
+	sms_opcionInvalida: .asciiz "\n- AVISO: Debe digitar un numero dentro de las opciones disponibles, y seguir las indicaciones dadas\n\n"
 	sms_ErrorDenominador: .asciiz "\n- ERROR: No se puede realizar la operacion por indeterminacion\n"
 	sms_ErrorDivision: .asciiz "\n- ERROR: No se puede realizar la division porque el resultado\n  es una fraccion con denominador cero, lo cual es INDETERMINACION\n\n"
-	sms_ErrorRaiz: .asciiz "\n- ERROR: No se aceptan números negativos\n\n"
+	sms_ErrorRaiz: .asciiz "\n- ERROR: No se aceptan numeros negativos\n\n"
 	
 	sms_mas: .asciiz "   +   "
 	sms_menos: .asciiz "   -   "
@@ -209,7 +209,7 @@
 			# Imprimir fraccion resultante (hacer validaciones)
 			j mostrarResultado
 		
-	# Operacion de multiplicación
+	# Operacion de multiplicacion
 	multiplicacion:
 		beq $t2, 0, msgErrorDenominador
 		beq $t4, 0, msgErrorDenominador
@@ -493,7 +493,7 @@
 			# Dvdir numerador / denominador directamente y almacenar resultado en $f3
 			div.s $f3, $f1, $f2
 		mostrarResultadoRaizCuadrada:
-			# Muestra la parte donde se realiza la operación
+			# Muestra la parte donde se realiza la operaciï¿½n
 			li $v0, 4
 			la $a0, sms_raizCuadrada
 			syscall	

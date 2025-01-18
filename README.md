@@ -8,6 +8,8 @@ La calculadora permite realizar las siguientes operaciones hasta el momento:
 - **Resta** de fracciones
 - **Multiplicación** de fracciones
 - **División** de fracciones
+- **Potencia** de fracciones
+- **Raíz Cuadrada** de fracciones
 
 Además, la calculadora incluye validaciones matemáticas importantes, como:
 - Evitar divisiones por cero
@@ -29,7 +31,7 @@ El programa se organiza en dos grandes secciones:
      - **Menú principal**: Ejecuta un bucle de un menú con las operaciones disponibles y recibe lo que ingresa el usuario.
      - **Operaciones matemáticas**: Gestionan la lógica para cada operación (suma, resta, multiplicación, división).
      - **Validaciones**: Realiza el manejo de casos como denominadores iguales, división por cero, y simplificación de fracciones con sus respectivos casos.
-     - **Impresión de resultados**: Muestra los resultados en pantalla, tanto sin simplificar como simplificados, y de ser posible, en números enteros.
+     - **Impresión de resultados**: Muestra los resultados en pantalla, tanto sin simplificar como simplificados, y de ser posible, en números enteros. En el caso de la raíz cuadrada, lo hace con números flotantes
 
 ### Flujo del Programa
 1. **Menú Principal**:
@@ -38,6 +40,7 @@ El programa se organiza en dos grandes secciones:
 
 2. **Entrada de Datos**:
    - Solicita al usuario de manera clara los valores de los numeradores y denominadores de las dos fracciones.
+   - Para la potencia y la raíz cuadrada, solo hace falta la primera fracción.
 
 3. **Operaciones**:
    - Dependiendo de la opción seleccionada, se realiza la operación correspondiente:
@@ -45,6 +48,8 @@ El programa se organiza en dos grandes secciones:
      - **Resta**: Similar a la suma, maneja casos de denominadores iguales y diferentes.
      - **Multiplicación**: Multiplica los numeradores y denominadores.
      - **División**: Realiza la operación cruzada entre numeradores y denominadores.
+     - **Potencia**: Realiza la operación de potencia mediante un algoritmo, trabajando con uno o dos exponentes separados.
+     - **Raíz Cuadrada**: Realiza la operación mediante números flotantes (`float`), validando que n,m >= 0.
 
 4. **Simplificación**:
    - Implementa el **algoritmo de Euclides** para encontrar el máximo común divisor (MCD) y simplificar la fracción resultante. Se salta este paso si el numerador es cero
@@ -62,6 +67,8 @@ El programa se organiza en dos grandes secciones:
 - **Denominadores iguales en suma y resta**: Realiza las operaciones directamente para simplificar los cálculos.
 - **Simplificación**: Siempre intenta reducir la fracción al menor término posible.
 - **Resultado entero**: Si el numerador es divisible por el denominador, muestra el resultado como un número entero.
+- **Potencias especiales**: Realiza una validación de como se debe operar la potencia según el exponente ingresado.
+- **Raíces de n y m válidas**: Para la raíz cuadrada, el numerador y denominador debe ser mayor o igual a cero antes de operar. Muestra un mensaje de error de no ser así.
 
 
 
